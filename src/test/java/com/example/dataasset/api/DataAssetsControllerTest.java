@@ -61,8 +61,10 @@ final class DataAssetsControllerTest {
     @Test
     @CalibratUser(privileges = GET_DATA_ASSET)
     void getNestedDataAssetSummariesForProfileReturnsEmptyPage() throws Exception {
-        // no assets inserted — expect empty page response
-        MockHttpServletRequestBuilder req = get(urlTemplate("/data-assets/nested-summaries/truata"))
+        // no assets inserted — use profileName variable directly, same as existing tests
+        var profileName = "truata";
+
+        MockHttpServletRequestBuilder req = get(urlTemplate("/data-assets/nested-summaries/{profileName}", profileName))
                 .contentType(APPLICATION_JSON);
 
         String response = mockMvc.perform(req)
@@ -80,13 +82,14 @@ final class DataAssetsControllerTest {
     @CalibratUser(privileges = GET_DATA_ASSET)
     void getNestedDataAssetSummariesForProfileReturnsDefaultPagination() throws Exception {
         // insert 25 parent assets — default page size is 20, expect first 20 returned
+        DataAsset savedAsset = null;
         for (int i = 1; i <= 25; i++) {
             var job = jobs.save(AIRJob.builder()
                     .dataAssetId("asset-" + i)
                     .status("COMPLETED")
                     .tenantId(DEFAULT_TEST_TENANT_ID)
                     .build());
-            assets.insert(DataAsset.builder()
+            savedAsset = assets.insert(DataAsset.builder()
                     .name("asset-" + i)
                     .profileName("truata")
                     .tenantId(DEFAULT_TEST_TENANT_ID)
@@ -94,7 +97,7 @@ final class DataAssetsControllerTest {
                     .build());
         }
 
-        MockHttpServletRequestBuilder req = get(urlTemplate("/data-assets/nested-summaries/truata"))
+        MockHttpServletRequestBuilder req = get(urlTemplate("/data-assets/nested-summaries/{profileName}", savedAsset.getProfileName()))
                 .contentType(APPLICATION_JSON);
 
         String response = mockMvc.perform(req)
@@ -113,15 +116,16 @@ final class DataAssetsControllerTest {
     @Test
     @CalibratUser(privileges = GET_DATA_ASSET)
     void getNestedDataAssetSummariesForProfileWithPagination() throws Exception {
+        DataAsset savedAsset = null;
         for (int i = 1; i <= 5; i++) {
-            assets.insert(DataAsset.builder()
+            savedAsset = assets.insert(DataAsset.builder()
                     .name("asset-" + i)
                     .profileName("truata")
                     .tenantId(DEFAULT_TEST_TENANT_ID)
                     .build());
         }
 
-        MockHttpServletRequestBuilder req = get(urlTemplate("/data-assets/nested-summaries/truata"))
+        MockHttpServletRequestBuilder req = get(urlTemplate("/data-assets/nested-summaries/{profileName}", savedAsset.getProfileName()))
                 .param("pageable.page", "0")
                 .param("pageable.size", "3")
                 .contentType(APPLICATION_JSON);
@@ -142,15 +146,16 @@ final class DataAssetsControllerTest {
     @Test
     @CalibratUser(privileges = GET_DATA_ASSET)
     void getNestedDataAssetSummariesForProfileReturnsSecondPage() throws Exception {
+        DataAsset savedAsset = null;
         for (int i = 1; i <= 5; i++) {
-            assets.insert(DataAsset.builder()
+            savedAsset = assets.insert(DataAsset.builder()
                     .name("asset-" + i)
                     .profileName("truata")
                     .tenantId(DEFAULT_TEST_TENANT_ID)
                     .build());
         }
 
-        MockHttpServletRequestBuilder req = get(urlTemplate("/data-assets/nested-summaries/truata"))
+        MockHttpServletRequestBuilder req = get(urlTemplate("/data-assets/nested-summaries/{profileName}", savedAsset.getProfileName()))
                 .param("pageable.page", "1")
                 .param("pageable.size", "3")
                 .contentType(APPLICATION_JSON);
@@ -188,14 +193,14 @@ final class DataAssetsControllerTest {
                 .status("FAILED")
                 .tenantId(DEFAULT_TEST_TENANT_ID)
                 .build());
-        assets.insert(DataAsset.builder()
+        var failedAsset = assets.insert(DataAsset.builder()
                 .name("failed-asset")
                 .profileName("truata")
                 .tenantId(DEFAULT_TEST_TENANT_ID)
                 .lastAIRJobId(failedJob.getId())
                 .build());
 
-        MockHttpServletRequestBuilder req = get(urlTemplate("/data-assets/nested-summaries/truata"))
+        MockHttpServletRequestBuilder req = get(urlTemplate("/data-assets/nested-summaries/{profileName}", failedAsset.getProfileName()))
                 .param("status", "COMPLETED")
                 .contentType(APPLICATION_JSON);
 
@@ -243,14 +248,14 @@ final class DataAssetsControllerTest {
                 .status("RUNNING")
                 .tenantId(DEFAULT_TEST_TENANT_ID)
                 .build());
-        assets.insert(DataAsset.builder()
+        var runningAsset = assets.insert(DataAsset.builder()
                 .name("running-asset")
                 .profileName("truata")
                 .tenantId(DEFAULT_TEST_TENANT_ID)
                 .lastAIRJobId(runningJob.getId())
                 .build());
 
-        MockHttpServletRequestBuilder req = get(urlTemplate("/data-assets/nested-summaries/truata"))
+        MockHttpServletRequestBuilder req = get(urlTemplate("/data-assets/nested-summaries/{profileName}", runningAsset.getProfileName()))
                 .param("status", "FAILED")
                 .param("status", "CANCELLED")
                 .contentType(APPLICATION_JSON);
@@ -290,14 +295,14 @@ final class DataAssetsControllerTest {
                 .status("FAILED")
                 .tenantId(DEFAULT_TEST_TENANT_ID)
                 .build());
-        assets.insert(DataAsset.builder()
+        var failedAsset = assets.insert(DataAsset.builder()
                 .name("failed-asset")
                 .profileName("truata")
                 .tenantId(DEFAULT_TEST_TENANT_ID)
                 .lastAIRJobId(failedJob.getId())
                 .build());
 
-        MockHttpServletRequestBuilder req = get(urlTemplate("/data-assets/nested-summaries/truata"))
+        MockHttpServletRequestBuilder req = get(urlTemplate("/data-assets/nested-summaries/{profileName}", failedAsset.getProfileName()))
                 .param("status", "COMPLETED")
                 .param("pageable.page", "0")
                 .param("pageable.size", "3")
@@ -323,14 +328,14 @@ final class DataAssetsControllerTest {
                 .status("RUNNING")
                 .tenantId(DEFAULT_TEST_TENANT_ID)
                 .build());
-        assets.insert(DataAsset.builder()
+        var runningAsset = assets.insert(DataAsset.builder()
                 .name("running-asset")
                 .profileName("truata")
                 .tenantId(DEFAULT_TEST_TENANT_ID)
                 .lastAIRJobId(runningJob.getId())
                 .build());
 
-        MockHttpServletRequestBuilder req = get(urlTemplate("/data-assets/nested-summaries/truata"))
+        MockHttpServletRequestBuilder req = get(urlTemplate("/data-assets/nested-summaries/{profileName}", runningAsset.getProfileName()))
                 .param("status", "COMPLETED")
                 .contentType(APPLICATION_JSON);
 
